@@ -26,8 +26,15 @@ export class AlbumsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.albumsService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const album = await this.albumsService.findOne(+id);
+    const length = await this.albumsService.getAlbumLength(+id);
+    album['length'] = length;
+    return album;
+    /*return {
+      ...album,
+      length,
+    }*/
   }
 
   // :albumid/addSong/:songid
@@ -37,6 +44,14 @@ export class AlbumsController {
     @Param('songid') songid: string,
   ) {
     return this.albumsService.addSongToAlbum(+albumid, +songid);
+  }
+
+  @Delete(':albumid/removeSong/:songid')
+  removeSong(
+    @Param('albumid') albumid: string,
+    @Param('songid') songid: string,
+  ) {
+    return this.albumsService.removeSong(+albumid, +songid);
   }
 
   @Patch(':id')

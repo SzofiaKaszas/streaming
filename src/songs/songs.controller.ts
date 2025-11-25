@@ -21,18 +21,33 @@ export class SongsController {
     return this.songsService.create(createSongDto);
   }
 
-  // /songs?start=12&count=10
+  // /songs?start=12&top=10
   @Get()
   findAll(
     @Query('start') start: string = '0',
-    @Query('count') count: string = '10',
+    @Query('top') top: string = '10',
   ) {
-    return this.songsService.findAll(+start, +count);
+    return this.songsService.findAll(+start, +top);
   }
 
   @Get('search')
   search(@Query('title') title: string) {
     return this.songsService.search(title);
+  }
+
+  @Get('longest')
+  getLongest(@Query('top') top: string = '3') {
+    return this.songsService.getLongest(+top);
+  }
+
+  @Get('popular')
+  getMostPopular() {
+    return this.songsService.getMostPopular();
+  }
+
+  @Get('recent')
+  getMostRecent() {
+    return this.songsService.getMostRecent();
   }
 
   @Get(':id')
@@ -49,4 +64,5 @@ export class SongsController {
   remove(@Param('id') id: string) {
     return this.songsService.remove(+id);
   }
+  
 }

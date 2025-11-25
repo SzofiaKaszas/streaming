@@ -5,10 +5,10 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class AlbumsService {
-  constructor(private readonly albums_db: PrismaService) {}
+  constructor(private readonly db: PrismaService) {}
 
   create(createAlbumDto: CreateAlbumDto) {
-    return this.albums_db.album.create({
+    return this.db.album.create({
       data: {
         title: createAlbumDto.title,
       },
@@ -16,17 +16,38 @@ export class AlbumsService {
   }
 
   findAll() {
-    return this.albums_db.album.findMany();
+    return this.db.album.findMany();
   }
 
   findOne(id: number) {
-    return this.albums_db.album.findUnique({
+    return this.db.album.findUniqueOrThrow({
       where: { id },
+      include: {
+        songs: {
+          //select: { id: true, title: true, length: true, genre: true },
+          omit: {
+            albumId: true,
+          },
+        },
+      },
     });
   }
 
+  async getAlbumLength(id: number): Promise<number | null> {
+    return (
+      await this.db.song.aggregate({
+        _sum: {
+          length: true,
+        },
+        where: {
+          albumId: id,
+        },
+      })
+    )._sum.length;
+  }
+
   addSongToAlbum(albumid: number, songid: number) {
-    return this.albums_db.album.update({
+    return this.db.album.update({
       where: { id: albumid },
       data: {
         songs: {
@@ -38,7 +59,7 @@ export class AlbumsService {
   }
 
   update(id: number, updateAlbumDto: UpdateAlbumDto) {
-    return this.albums_db.album.update({
+    return this.db.album.update({
       where: { id },
       data: {
         title: updateAlbumDto.title,
@@ -47,8 +68,19 @@ export class AlbumsService {
   }
 
   remove(id: number) {
-    return this.albums_db.album.delete({
+    return this.db.album.delete({
       where: { id },
+    });
+  }
+
+  removeSong(albumid: number, songid : number){
+    return this.db.album.update({
+      where : {id:albumid},
+      data:{
+        songs:{
+          disconnect:{id:songid},
+        },
+      },
     });
   }
 }

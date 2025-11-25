@@ -5,23 +5,24 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class SongsService {
-  constructor(private readonly sonsg_db: PrismaService) {}
+  constructor(private readonly db: PrismaService) {}
 
   create(createSongDto: CreateSongDto) {
-    return this.sonsg_db.song.create({
+    return this.db.song.create({
       data: createSongDto,
     });
   }
 
-  findAll(start: number, count: number) {
-    return this.sonsg_db.song.findMany({
+  findAll(start: number, top: number) {
+    return this.db.song.findMany({
       skip: start,
-      take: count,
+      take: top,
+      include: { album: true },
     });
   }
 
   search(title: string) {
-    return this.sonsg_db.song.findMany({
+    return this.db.song.findMany({
       where: {
         title: {
           contains: title,
@@ -31,21 +32,52 @@ export class SongsService {
   }
 
   findOne(id: number) {
-    return this.sonsg_db.song.findUnique({
+    return this.db.song.findUnique({
       where: { id },
+      include: { album: true },
     });
   }
 
   update(id: number, updateSongDto: UpdateSongDto) {
-    return this.sonsg_db.song.update({
+    return this.db.song.update({
       where: { id },
       data: updateSongDto,
     });
   }
 
   remove(id: number) {
-    return this.sonsg_db.song.delete({
+    return this.db.song.delete({
       where: { id },
+    });
+  }
+
+  getLongest(top: number) {
+    return this.db.song.findMany({
+      take: top,
+      orderBy: {
+        length: 'desc',
+      },
+    });
+  }
+
+  async getMostPopular() {
+    return await this.db.song.findMany({
+      orderBy:{
+        favoritedBy: {
+          _count: 'desc'
+        }
+      },
+      take: 10,
+      include: {favoritedBy: true}
+    });
+  }
+
+  async getMostRecent() {
+    return await this.db.song.findMany({
+      orderBy:{
+        createdAt: 'desc'
+      },
+      take: 10,
     });
   }
 }
